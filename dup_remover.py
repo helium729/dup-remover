@@ -143,9 +143,11 @@ def process_duplicates(duplicates, dry_run=False):
     space_saved = 0
     
     for file_hash, file_paths in duplicates.items():
-        # Keep the first file as the original, replace others with links
-        original = file_paths[0]
-        duplicates_list = file_paths[1:]
+        # Sort by path length and keep the shortest path as original
+        # This minimizes the chance of broken links if files are moved
+        file_paths_sorted = sorted(file_paths, key=lambda p: len(p))
+        original = file_paths_sorted[0]
+        duplicates_list = file_paths_sorted[1:]
         
         print(f"\nDuplicate set (hash: {file_hash[:16]}...):")
         print(f"  Original: {original}")
@@ -174,11 +176,10 @@ def format_size(bytes_size):
     Returns:
         Formatted string (e.g., "1.5 MB")
     """
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if bytes_size < 1024.0:
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB', 'PB']:
+        if bytes_size < 1024.0 or unit == 'PB':
             return f"{bytes_size:.2f} {unit}"
         bytes_size /= 1024.0
-    return f"{bytes_size:.2f} PB"
 
 
 def main():
