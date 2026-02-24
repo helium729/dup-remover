@@ -53,9 +53,11 @@ python dup_remover.py /path/to/directory
 
 This will:
 1. Scan for duplicates
-2. Display all duplicate groups with file numbers
+2. Display all duplicate groups with file numbers (files marked [0] are kept, [1], [2], etc. are duplicates)
 3. Ask for confirmation before proceeding
-4. Allow you to exclude specific files (e.g., "1.2,3.1" excludes group 1 file 2 and group 3 file 1)
+4. Allow you to exclude specific duplicate files (e.g., "1.2, 3.1" excludes group 1 file 2 and group 3 file 1)
+   - Only files marked [1], [2], etc. can be excluded
+   - Files marked [0] are always kept as the original
 5. Process the remaining duplicates
 
 ### Auto-Confirm Mode

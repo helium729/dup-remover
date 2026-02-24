@@ -207,7 +207,9 @@ def get_excluded_files(duplicates):
     print("\n" + "="*60)
     print("You can exclude specific files from deduplication.")
     print("Options:")
-    print("  - Enter file numbers (e.g., '1.2,3.1' for group 1 file 2, group 3 file 1)")
+    print("  - Enter file numbers (e.g., '1.2, 3.1' for group 1 file 2, group 3 file 1)")
+    print("  - Only files marked [1], [2], etc. can be excluded (not [0] which is kept)")
+    print("  - Spaces after commas are optional")
     print("  - Press Enter to skip exclusions")
     print("="*60)
     
@@ -224,16 +226,22 @@ def get_excluded_files(duplicates):
         if '.' in item:
             try:
                 group_idx, file_idx = item.split('.')
-                group_idx = int(group_idx) - 1
-                file_idx = int(file_idx)
+                group_idx = int(group_idx) - 1  # Convert to 0-based index
+                file_idx = int(file_idx)  # This is 1-based and refers to duplicates
                 
                 if 0 <= group_idx < len(group_list):
                     file_hash, file_paths = group_list[group_idx]
                     file_paths_sorted = sorted(file_paths, key=lambda p: len(p))
                     
+                    # file_idx is 1-based and refers to duplicates (not including [0])
+                    # file_paths_sorted[0] is the original (KEEP), file_paths_sorted[1..n] are duplicates
                     if 1 <= file_idx < len(file_paths_sorted):
                         excluded.add(file_paths_sorted[file_idx])
                         print(f"Excluded: {file_paths_sorted[file_idx]}")
+                    else:
+                        print(f"Invalid file number {file_idx} for group {group_idx + 1} (valid: 1-{len(file_paths_sorted) - 1})")
+                else:
+                    print(f"Invalid group number {group_idx + 1} (valid: 1-{len(group_list)})")
             except (ValueError, IndexError):
                 print(f"Invalid entry: {item}")
     
