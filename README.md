@@ -13,8 +13,12 @@ A cross-platform Python tool to find duplicate files and replace them with links
 - Fast duplicate detection using SHA256 hashing
 - Cross-platform support (Windows, Linux, macOS)
 - Platform-specific link creation (soft links on Unix, hard links on Windows)
+- **Interactive confirmation** - Review duplicates before processing
+- **Selective exclusion** - Exclude specific files from deduplication
+- **Report generation** - Create a detailed report of duplicates
 - Windows executable file exclusion option
 - Dry-run mode to preview changes
+- Auto-confirm mode for batch processing
 - Human-readable space savings report
 
 ## Requirements
@@ -39,12 +43,35 @@ chmod +x dup_remover.py
 
 ## Usage
 
-### Basic Usage
+### Interactive Mode (Default)
 
-Scan a directory for duplicates and replace them with links:
+By default, the tool runs interactively, showing you all duplicates and asking for confirmation:
 
 ```bash
 python dup_remover.py /path/to/directory
+```
+
+This will:
+1. Scan for duplicates
+2. Display all duplicate groups with file numbers
+3. Ask for confirmation before proceeding
+4. Allow you to exclude specific files (e.g., "1.2,3.1" excludes group 1 file 2 and group 3 file 1)
+5. Process the remaining duplicates
+
+### Auto-Confirm Mode
+
+Skip confirmation prompts and process all duplicates automatically:
+
+```bash
+python dup_remover.py /path/to/directory --auto-confirm
+```
+
+### Generate Report
+
+Create a detailed report without making any changes:
+
+```bash
+python dup_remover.py /path/to/directory --report duplicates.txt
 ```
 
 ### Dry Run Mode
@@ -73,6 +100,8 @@ optional arguments:
   -h, --help            Show this help message and exit
   --dry-run             Show what would be done without making any changes
   --exclude-executables Exclude Windows executable files from deduplication (Windows only)
+  --auto-confirm        Skip confirmation prompts and process all duplicates automatically
+  --report FILE         Generate a report of duplicates to a file instead of processing
 ```
 
 ## How It Works
@@ -89,7 +118,81 @@ optional arguments:
 
 ## Examples
 
-### Example 1: Dry run to see what would happen
+### Example 1: Interactive mode with selective exclusion
+
+```bash
+$ python dup_remover.py ./test_data
+Platform: Linux
+Link type: Soft links (symlinks)
+
+Scanning directory: ./test_data
+
+Group 1 (hash: a1b2c3d4e5f6...):
+  [0] ./test_data/file1.txt (KEEP)
+  [1] ./test_data/copy1.txt (1.00 KB)
+  [2] ./test_data/copy2.txt (1.00 KB)
+
+Group 2 (hash: b2c3d4e5f6a7...):
+  [0] ./test_data/file2.txt (KEEP)
+  [1] ./test_data/copy3.txt (2.00 KB)
+
+============================================================
+Total duplicate files: 3
+Potential space savings: 4.00 KB
+============================================================
+
+Proceed with deduplication? (y/n): y
+
+============================================================
+You can exclude specific files from deduplication.
+Options:
+  - Enter file numbers (e.g., '1.2,3.1' for group 1 file 2, group 3 file 1)
+  - Press Enter to skip exclusions
+============================================================
+
+Enter files to exclude (or press Enter to continue): 1.1
+Excluded: ./test_data/copy1.txt
+
+Processing duplicates...
+Created soft link: ./test_data/copy2.txt -> file1.txt
+Created soft link: ./test_data/copy3.txt -> file2.txt
+
+============================================================
+Successfully processed 2 duplicate files
+Space saved: 3.00 KB
+Files excluded: 1
+============================================================
+```
+
+### Example 2: Generate a report
+
+```bash
+$ python dup_remover.py ./test_data --report duplicates.txt
+Platform: Linux
+Link type: Soft links (symlinks)
+
+Scanning directory: ./test_data
+
+Group 1 (hash: a1b2c3d4e5f6...):
+  [0] ./test_data/file1.txt (KEEP)
+  [1] ./test_data/copy1.txt (1.00 KB)
+
+Report generated: duplicates.txt
+```
+
+### Example 3: Auto-confirm mode for batch processing
+
+```bash
+$ python dup_remover.py ./test_data --auto-confirm
+Platform: Linux
+Link type: Soft links (symlinks)
+...
+Processing duplicates...
+Successfully processed 3 duplicate files
+Space saved: 4.00 KB
+```
+
+### Example 4: Dry run to preview changes
 
 ```bash
 $ python dup_remover.py ./test_data --dry-run
@@ -99,27 +202,18 @@ Link type: Soft links (symlinks)
 *** DRY RUN MODE - No changes will be made ***
 
 Scanning directory: ./test_data
-Found 2 duplicate file groups with 3 duplicate files.
 
-Duplicate set (hash: a1b2c3d4e5f6...):
-  Original: ./test_data/file1.txt
-  Would replace: ./test_data/copy1.txt (1024 bytes)
-  Would replace: ./test_data/copy2.txt (1024 bytes)
-...
-```
-
-### Example 2: Process duplicates on Windows, excluding executables
-
-```bash
-C:\> python dup_remover.py C:\MyFiles --exclude-executables
-Platform: Windows
-Link type: Hard links
-Executable files: Excluded from deduplication
+Group 1 (hash: a1b2c3d4e5f6...):
+  [0] ./test_data/file1.txt (KEEP)
+  [1] ./test_data/copy1.txt (1.00 KB)
 ...
 ```
 
 ## Safety Notes
 
+- **Interactive by default**: The tool now requires confirmation before making changes
+- **Selective exclusion**: You can exclude specific files from deduplication
+- **Report generation**: Use `--report` to review duplicates without making changes
 - The tool skips symbolic links to avoid circular references
 - Always test with `--dry-run` first on important data
 - Ensure you have write permissions in the target directory
